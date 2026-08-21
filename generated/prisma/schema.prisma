@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model CandidateProfile {
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  currentTitle    String?
+  location        String?
+  resumePath      String?
+  yearsExperience Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model BrowserSession {
+  id            String   @id @default(cuid())
+  provider      String
+  encryptedData String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Job {
+  id          String   @id @default(cuid())
+  externalId  String?
+  title       String
+  company     String
+  location    String?
+  url         String   @unique
+  description String?
+  matchScore  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  applications Application[]
+}
+
+model Application {
+  id          String            @id @default(cuid())
+  jobId       String
+  status      ApplicationStatus @default(PENDING)
+  error       String?
+  startedAt   DateTime?
+  submittedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+enum ApplicationStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  FAILED
+  MANUAL_ACTION_REQUIRED
+}
