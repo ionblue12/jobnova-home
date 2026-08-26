@@ -1,11 +1,10 @@
 generator client {
   provider = "prisma-client"
-  output = "../generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  
 }
 
 model CandidateProfile {
@@ -18,44 +17,65 @@ model CandidateProfile {
   location        String?
   resumePath      String?
   yearsExperience Int?
+  workExperience  Json?
+  education       Json?
+  jobPreferences  Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  sessions     BrowserSession[]
+  applications Application[]
 }
 
 model BrowserSession {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   provider      String
   encryptedData String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  profileId     String
+  expiresAt     DateTime?
+  lastUsedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile CandidateProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, profileId])
 }
 
 model Job {
-  id           String   @id @default(cuid())
-  externalId   String?
-  title        String
-  company      String
-  location     String?
-  url          String   @unique
-  description  String?
-  matchScore   Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(cuid())
+  externalId  String?
+  title       String
+  company     String
+  location    String?
+  url         String   @unique
+  description String?
+  matchScore  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   applications Application[]
 }
 
 model Application {
-  id          String            @id @default(cuid())
-  jobId       String
-  status      ApplicationStatus @default(PENDING)
-  error       String?
-  startedAt   DateTime?
-  submittedAt DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  jobId         String
+  profileId     String
+  status        ApplicationStatus @default(PENDING)
+  error         String?
+  currentStep   String?
+  manualAction  String?
+  attemptCount  Int               @default(0)
+  lastAttemptAt DateTime?
+  startedAt     DateTime?
+  submittedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
-  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job     Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  profile CandidateProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, profileId])
 }
 
 enum ApplicationStatus {
