@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client"
+  // This project runs plain JavaScript worker scripts directly with Node.
+  // Generate executable JS instead of TypeScript-only client sources.
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 

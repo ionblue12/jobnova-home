@@ -1,4 +1,6 @@
 generator client {
+  // This project runs plain JavaScript worker scripts directly with Node.
+  // Generate executable JS instead of TypeScript-only client sources.
   provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
@@ -17,16 +19,29 @@ model CandidateProfile {
   location        String?
   resumePath      String?
   yearsExperience Int?
+  workExperience  Json?
+  education       Json?
+  jobPreferences  Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  sessions     BrowserSession[]
+  applications Application[]
 }
 
 model BrowserSession {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   provider      String
   encryptedData String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  profileId     String
+  expiresAt     DateTime?
+  lastUsedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile CandidateProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, profileId])
 }
 
 model Job {
@@ -45,16 +60,24 @@ model Job {
 }
 
 model Application {
-  id          String            @id @default(cuid())
-  jobId       String
-  status      ApplicationStatus @default(PENDING)
-  error       String?
-  startedAt   DateTime?
-  submittedAt DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  jobId         String
+  profileId     String
+  status        ApplicationStatus @default(PENDING)
+  error         String?
+  currentStep   String?
+  manualAction  String?
+  attemptCount  Int               @default(0)
+  lastAttemptAt DateTime?
+  startedAt     DateTime?
+  submittedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
-  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job     Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  profile CandidateProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, profileId])
 }
 
 enum ApplicationStatus {
